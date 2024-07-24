@@ -1,12 +1,13 @@
 #!/bin/bash
 
+webhook_url="$SLACK_WEBHOOK_URL"
+
 # Check if the Slack webhook URL environment variable is set
 if [ -z "$webhook_url" ]; then
   echo "Error: SLACK_WEBHOOK_URL environment variable not set."
   exit 1
 fi
 
-webhook_url="$SLACK_WEBHOOK_URL"
 
 # Function to generate a timestamp
 function timestamp() {
@@ -32,9 +33,7 @@ function report_results() {
   # Send results to Slack
   file_path="diff_results.txt"
   file_content=$(cat "$file_path")
-  payload='{
-    "text": "'"$file_content"'"
-  }'
+  payload='{"text": "'"$file_content"'"}'
 
   curl -X POST --header 'Content-type: application/json' --data "$payload" "$webhook_url"
 }
