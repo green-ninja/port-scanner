@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Check if the Slack webhook URL environment variable is set
+if [ -z "$webhook_url" ]; then
+  echo "Error: SLACK_WEBHOOK_URL environment variable not set."
+  exit 1
+fi
+
+webhook_url="$SLACK_WEBHOOK_URL"
+
 # Function to generate a timestamp
 function timestamp() {
   date +%Y%m%d
@@ -12,14 +20,25 @@ function nmap_scan() {
   nmap -p- -sT -sU -oX "$output_file" "$target" > /dev/null 2>&1
 }
 
-# Function to compare results using ndiff
-function compare_results() {
+#  Compare results using ndiff and send to Slack
+function report_results() {
+  # Compare results
   today=$(timestamp)
   yesterday=$(date -d yesterday +%Y%m%d)
   today_file="$today-scan-results.xml"
   yesterday_file="$yesterday-scan-results.xml"
-  ndiff "$yesterday_file" "$today_file"
+  ndiff "$yesterday_file" "$today_file" > diff_results.txt
+
+  # Send results to Slack
+  file_path="diff_results.txt"
+  file_content=$(cat "$file_path")
+  payload='{
+    "text": "'"$file_content"'"
+  }'
+
+  curl -X POST --header 'Content-type: application/json' --data "$payload" "$webhook_url"
 }
+
 
 # Main script
 if [ ! -f targets.txt ]; then
@@ -31,4 +50,4 @@ for target in $(cat targets.txt); do
   nmap_scan "$target"
 done
 
-compare_results
+report_results
