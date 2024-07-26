@@ -18,7 +18,7 @@ function timestamp() {
 function nmap_scan() {
   target="$1"
   output_file="$(timestamp)-scan-results.xml"
-  nmap -p- -sT -sU -oX "$output_file" "$target" > /dev/null 2>&1
+  nmap -p- -sT -sU -oX "$output_file" "targets.txt" > /dev/null 2>&1
 }
 
 #  Compare results using ndiff and send to Slack
@@ -45,8 +45,5 @@ if [ ! -f targets.txt ]; then
   exit 1
 fi
 
-for target in $(cat targets.txt); do
-  nmap_scan "$target"
-done
-
+nmap_scan
 report_results
